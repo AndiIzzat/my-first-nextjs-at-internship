@@ -394,10 +394,32 @@ export default function ChatWidget() {
     return () => clearTimeout(timeout);
   }, [inputValue]);
 
-  // Init audio
+  // Init audio with preload
   useEffect(() => {
-    audioRef.current = new Audio("/notificationsound1.mp3");
-    audioRef.current.volume = 0.5;
+    const audio = new Audio("/notificationsound1.mp3");
+    audio.volume = 0.5;
+    audio.preload = "auto";
+    audioRef.current = audio;
+
+    // Unlock audio on first user interaction (browser policy)
+    const unlockAudio = () => {
+      if (audioRef.current) {
+        audioRef.current.play().then(() => {
+          audioRef.current?.pause();
+          audioRef.current!.currentTime = 0;
+        }).catch(() => {});
+      }
+      document.removeEventListener("click", unlockAudio);
+      document.removeEventListener("touchstart", unlockAudio);
+    };
+
+    document.addEventListener("click", unlockAudio);
+    document.addEventListener("touchstart", unlockAudio);
+
+    return () => {
+      document.removeEventListener("click", unlockAudio);
+      document.removeEventListener("touchstart", unlockAudio);
+    };
   }, []);
 
   // Close dropdown on outside click
