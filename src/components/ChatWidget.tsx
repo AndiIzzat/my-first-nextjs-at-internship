@@ -617,9 +617,10 @@ export default function ChatWidget() {
     }
   };
 
-  // Resize handlers
-  const handleResizeStart = (e: React.MouseEvent) => {
+  // Resize handlers with direction support
+  const handleResizeStart = (e: React.MouseEvent, direction: "nw" | "n" | "w" | "ne" | "e" | "sw" | "s" | "se") => {
     e.preventDefault();
+    e.stopPropagation();
     setIsResizing(true);
 
     const startX = e.clientX;
@@ -628,8 +629,23 @@ export default function ChatWidget() {
     const startHeight = chatSize.height;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const newWidth = Math.max(320, Math.min(600, startWidth - (e.clientX - startX)));
-      const newHeight = Math.max(400, Math.min(800, startHeight - (e.clientY - startY)));
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+
+      // Handle horizontal resize
+      if (direction.includes("w")) {
+        newWidth = Math.max(320, Math.min(700, startWidth - (e.clientX - startX)));
+      } else if (direction.includes("e")) {
+        newWidth = Math.max(320, Math.min(700, startWidth + (e.clientX - startX)));
+      }
+
+      // Handle vertical resize
+      if (direction.includes("n")) {
+        newHeight = Math.max(400, Math.min(900, startHeight - (e.clientY - startY)));
+      } else if (direction.includes("s")) {
+        newHeight = Math.max(400, Math.min(900, startHeight + (e.clientY - startY)));
+      }
+
       setChatSize({ width: newWidth, height: newHeight });
     };
 
@@ -974,29 +990,94 @@ export default function ChatWidget() {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`fixed z-50 overflow-hidden flex flex-col transition-all duration-300 ${
+        className={`fixed z-50 overflow-hidden flex flex-col ${
+          isResizing ? "" : "transition-all duration-300"
+        } ${
           isMobile ? "chat-widget-mobile" : "rounded-2xl"
         } ${
           isOpen ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 translate-y-8 pointer-events-none"
-        } ${isDragging ? "ring-2 ring-blue-500" : ""}`}
+        } ${isDragging ? "ring-2 ring-blue-500" : ""} ${isResizing ? "ring-2 ring-opacity-50" : ""}`}
         style={{
           backgroundColor: colors.bg,
           border: isMobile ? "none" : `1px solid ${colors.border}`,
           boxShadow: isMobile ? "none" : (theme === "dark" ? "0 0 60px rgba(0,0,0,0.5)" : "0 25px 50px -12px rgba(0,0,0,0.25)"),
+          ["--tw-ring-color" as string]: colors.accent,
           borderRadius: isMobile ? 0 : undefined,
           ...(isFullscreen || isMobile
             ? { top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" }
             : { bottom: 96, right: 24, width: chatSize.width, height: chatSize.height }),
         }}
       >
-        {/* Resize handle (top-left corner) - hidden on mobile */}
+        {/* Resize handles - hidden on mobile and fullscreen */}
         {!isFullscreen && !isMobile && (
-          <div
-            onMouseDown={handleResizeStart}
-            className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-50 opacity-0 hover:opacity-100 transition-opacity"
-            style={{ backgroundColor: colors.border }}
-            title="Drag to resize"
-          />
+          <>
+            {/* Corner handles */}
+            {/* Top-left */}
+            <div
+              onMouseDown={(e) => handleResizeStart(e, "nw")}
+              className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize z-50 group"
+            >
+              <div
+                className="absolute top-1 left-1 w-2 h-2 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ backgroundColor: colors.textMuted }}
+              />
+            </div>
+            {/* Top-right */}
+            <div
+              onMouseDown={(e) => handleResizeStart(e, "ne")}
+              className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize z-50 group"
+            >
+              <div
+                className="absolute top-1 right-1 w-2 h-2 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ backgroundColor: colors.textMuted }}
+              />
+            </div>
+            {/* Bottom-left */}
+            <div
+              onMouseDown={(e) => handleResizeStart(e, "sw")}
+              className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize z-50 group"
+            >
+              <div
+                className="absolute bottom-1 left-1 w-2 h-2 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ backgroundColor: colors.textMuted }}
+              />
+            </div>
+            {/* Bottom-right - main resize handle with icon */}
+            <div
+              onMouseDown={(e) => handleResizeStart(e, "se")}
+              className="absolute bottom-0 right-0 w-5 h-5 cursor-se-resize z-50 flex items-center justify-center group"
+            >
+              <svg
+                className="w-3 h-3 opacity-30 group-hover:opacity-70 transition-opacity"
+                fill={colors.textMuted}
+                viewBox="0 0 24 24"
+              >
+                <path d="M22 22H20V20H22V22ZM22 18H20V16H22V18ZM18 22H16V20H18V22ZM22 14H20V12H22V14ZM18 18H16V16H18V18ZM14 22H12V20H14V22ZM22 10H20V8H22V10ZM18 14H16V12H18V14ZM14 18H12V16H14V18ZM10 22H8V20H10V22Z"/>
+              </svg>
+            </div>
+
+            {/* Edge handles */}
+            {/* Top edge */}
+            <div
+              onMouseDown={(e) => handleResizeStart(e, "n")}
+              className="absolute top-0 left-4 right-4 h-2 cursor-n-resize z-40"
+            />
+            {/* Bottom edge */}
+            <div
+              onMouseDown={(e) => handleResizeStart(e, "s")}
+              className="absolute bottom-0 left-4 right-4 h-2 cursor-s-resize z-40"
+            />
+            {/* Left edge */}
+            <div
+              onMouseDown={(e) => handleResizeStart(e, "w")}
+              className="absolute left-0 top-4 bottom-4 w-2 cursor-w-resize z-40"
+            />
+            {/* Right edge */}
+            <div
+              onMouseDown={(e) => handleResizeStart(e, "e")}
+              className="absolute right-0 top-4 bottom-4 w-2 cursor-e-resize z-40"
+            />
+          </>
         )}
 
         {/* Drag overlay */}
