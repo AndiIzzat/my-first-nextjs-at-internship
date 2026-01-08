@@ -5,10 +5,18 @@
   --foreground: #171717;
 }
 
-/* Light mode variables */
+/* Light mode variables - Warm Cream palette */
 html.light {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f5;
+  --foreground: #2d2a26;
+  --cream-bg: #faf8f5;
+  --cream-card: #ffffff;
+  --cream-secondary: #f5f2ed;
+  --cream-border: #e8e4dc;
+  --cream-text: #2d2a26;
+  --cream-text-secondary: #5c574e;
+  --cream-text-muted: #9c958a;
+  --cream-accent: #2d2a26;
 }
 
 /* Dark mode variables */
@@ -31,145 +39,145 @@ body {
   scroll-behavior: smooth;
 }
 
-/* Light mode overrides for main page background */
+/* Light mode overrides for main page background - Warm Cream */
 html.light body {
-  background: #f5f5f5;
+  background: var(--cream-bg);
 }
 
-/* Light mode component styles */
+/* Light mode component styles - Warm Cream palette */
 html.light .bg-neutral-950 {
-  background-color: #f5f5f5 !important;
+  background-color: var(--cream-bg) !important;
 }
 
 html.light .bg-neutral-900:not(button):not(button *) {
-  background-color: #ffffff !important;
+  background-color: var(--cream-card) !important;
 }
 
 html.light .bg-neutral-800:not(button):not(button *) {
-  background-color: #f0f0f0 !important;
+  background-color: var(--cream-secondary) !important;
 }
 
 html.light .bg-neutral-800\/50 {
-  background-color: rgba(240, 240, 240, 0.5) !important;
+  background-color: rgba(245, 242, 237, 0.5) !important;
 }
 
 html.light .border-neutral-800 {
-  border-color: #e5e5e5 !important;
+  border-color: var(--cream-border) !important;
 }
 
 html.light .border-neutral-800\/50 {
-  border-color: rgba(229, 229, 229, 0.5) !important;
+  border-color: rgba(232, 228, 220, 0.5) !important;
 }
 
 html.light .border-neutral-700 {
-  border-color: #d4d4d4 !important;
+  border-color: #ddd8ce !important;
 }
 
 html.light .text-white:not(button *) {
-  color: #171717 !important;
+  color: var(--cream-text) !important;
 }
 
 html.light .text-neutral-100 {
-  color: #262626 !important;
+  color: #3d3a35 !important;
 }
 
 html.light .text-neutral-200 {
-  color: #404040 !important;
+  color: #4d4a44 !important;
 }
 
 html.light .text-neutral-300 {
-  color: #525252 !important;
+  color: var(--cream-text-secondary) !important;
 }
 
 html.light .text-neutral-400 {
-  color: #737373 !important;
+  color: #7a746a !important;
 }
 
 html.light .text-neutral-500 {
-  color: #a3a3a3 !important;
+  color: var(--cream-text-muted) !important;
 }
 
 html.light .text-neutral-600 {
-  color: #525252 !important;
+  color: var(--cream-text-secondary) !important;
 }
 
 html.light .bg-neutral-950\/80 {
-  background-color: rgba(255, 255, 255, 0.9) !important;
+  background-color: rgba(250, 248, 245, 0.95) !important;
 }
 
 html.light .bg-neutral-700 {
-  background-color: #e5e5e5 !important;
+  background-color: var(--cream-border) !important;
 }
 
-/* Light mode for grid background */
+/* Light mode for grid background - subtle warm tint */
 html.light .bg-\[linear-gradient\(rgba\(255\,255\,255\,0\.02\)_1px\,transparent_1px\)\,linear-gradient\(90deg\,rgba\(255\,255\,255\,0\.02\)_1px\,transparent_1px\)\] {
-  background-image: linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px) !important;
+  background-image: linear-gradient(rgba(45,42,38,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(45,42,38,0.03) 1px, transparent 1px) !important;
 }
 
 /* Light mode gradient overlay */
 html.light .from-neutral-950 {
-  --tw-gradient-from: #f5f5f5 !important;
+  --tw-gradient-from: var(--cream-bg) !important;
 }
 
 html.light .to-neutral-950 {
-  --tw-gradient-to: #f5f5f5 !important;
+  --tw-gradient-to: var(--cream-bg) !important;
 }
 
 /* Light mode hover states */
 html.light .hover\:text-white:hover {
-  color: #171717 !important;
+  color: var(--cream-text) !important;
 }
 
 html.light .hover\:bg-neutral-800:hover {
-  background-color: #e5e5e5 !important;
+  background-color: var(--cream-secondary) !important;
 }
 
 html.light .hover\:bg-neutral-700:hover {
-  background-color: #d4d4d4 !important;
+  background-color: #e8e4dc !important;
 }
 
 html.light .hover\:border-neutral-700:hover {
-  border-color: #a3a3a3 !important;
+  border-color: var(--cream-text-muted) !important;
 }
 
 /* Light mode for button backgrounds */
 html.light .bg-white {
-  background-color: #171717 !important;
-  color: #ffffff !important;
+  background-color: var(--cream-accent) !important;
+  color: var(--cream-card) !important;
 }
 
 html.light .bg-white.text-neutral-900 {
-  background-color: #171717 !important;
-  color: #ffffff !important;
+  background-color: var(--cream-accent) !important;
+  color: var(--cream-card) !important;
 }
 
 html.light .hover\:bg-neutral-200:hover {
-  background-color: #404040 !important;
+  background-color: #4d4a44 !important;
 }
 
 /* Fix for chat widget buttons in light mode */
 html.light .bg-white.text-neutral-900.hover\:bg-neutral-200:hover {
-  background-color: #404040 !important;
+  background-color: #4d4a44 !important;
 }
 
 /* Chat widget specific styles for light mode */
 html.light .rounded-2xl.bg-white.text-neutral-900 {
-  background-color: #e5e5e5 !important;
-  color: #171717 !important;
+  background-color: var(--cream-secondary) !important;
+  color: var(--cream-text) !important;
 }
 
 /* Placeholder image backgrounds */
 html.light .bg-neutral-900\/50 {
-  background-color: rgba(229, 229, 229, 0.5) !important;
+  background-color: rgba(245, 242, 237, 0.7) !important;
 }
 
-/* Profile image glow in light mode */
+/* Profile image glow in light mode - warm tones */
 html.light .from-neutral-700 {
-  --tw-gradient-from: #d4d4d4 !important;
+  --tw-gradient-from: #e0dbd2 !important;
 }
 
 html.light .to-neutral-800 {
-  --tw-gradient-to: #e5e5e5 !important;
+  --tw-gradient-to: var(--cream-border) !important;
 }
 
 /* Green accent (online indicator) should stay green */
@@ -189,7 +197,7 @@ html.light .from-yellow-500\/20 {
 
 /* Focus states */
 html.light .focus\:border-neutral-600:focus {
-  border-color: #a3a3a3 !important;
+  border-color: var(--cream-text-muted) !important;
 }
 
 /* Disabled button states */
@@ -199,25 +207,26 @@ html.light .disabled\:opacity-50:disabled {
 
 /* Divider lines */
 html.light .bg-neutral-700 {
-  background-color: #d4d4d4 !important;
+  background-color: var(--cream-border) !important;
 }
 
 html.light .w-px.bg-neutral-800 {
-  background-color: #d4d4d4 !important;
+  background-color: var(--cream-border) !important;
 }
 
 /* Stats section backgrounds */
 html.light .bg-neutral-900\/50 {
-  background-color: rgba(245, 245, 245, 0.8) !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border-color: var(--cream-border) !important;
 }
 
-/* Border radius and shadows in light mode */
+/* Border radius and shadows in light mode - warmer shadows */
 html.light .shadow-2xl {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 25px 50px -12px rgba(45, 42, 38, 0.12) !important;
 }
 
 html.light .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 10px 15px -3px rgba(45, 42, 38, 0.08), 0 4px 6px -2px rgba(45, 42, 38, 0.04) !important;
 }
 
 
@@ -422,12 +431,12 @@ html.dark ::-webkit-scrollbar-thumb:hover {
 }
 
 html.light ::-webkit-scrollbar-thumb {
-  background: #d4d4d4;
+  background: var(--cream-border);
   border-radius: 4px;
 }
 
 html.light ::-webkit-scrollbar-thumb:hover {
-  background: #a3a3a3;
+  background: var(--cream-text-muted);
 }
 
 /* Selection color */
@@ -437,6 +446,6 @@ html.dark ::selection {
 }
 
 html.light ::selection {
-  background: rgba(23, 23, 23, 0.2);
-  color: #171717;
+  background: rgba(45, 42, 38, 0.15);
+  color: var(--cream-text);
 }

@@ -9,7 +9,10 @@ import Projects from "@/components/Projects";
 import Experience from "@/components/Experience";
 import Contact from "@/components/Contact";
 import ChatWidget from "@/components/ChatWidget";
+import SpotifyWidget from "@/components/SpotifyWidget";
 import LoadingScreen from "@/components/LoadingScreen";
+import BackToTop from "@/components/BackToTop";
+import { FadeIn, ScaleIn } from "@/components/PageTransition";
 import { useTypewriter } from "@/hooks/useScrollAnimation";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -45,106 +48,122 @@ export default function Home() {
           {/* Horizontal layout */}
           <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
             {/* Left side - Photo */}
-            <div className="flex-shrink-0">
-              <div className="relative group">
-                {/* Outer glow */}
-                <div className="absolute -inset-1 bg-gradient-to-br from-neutral-700 to-neutral-800 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
+            <ScaleIn delay={0.2}>
+              <div className="flex-shrink-0">
+                <div className="relative group">
+                  {/* Outer glow */}
+                  <div className="absolute -inset-1 bg-gradient-to-br from-neutral-700 to-neutral-800 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-500"></div>
 
-                {/* Photo container */}
-                <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-2xl bg-neutral-900 border border-neutral-800 overflow-hidden">
-                  <Image
-                    src="/profile2.jpeg"
-                    alt="A. Izzat Shafran Ashari"
-                    fill
-                    className="object-cover"
-                    priority
-                  />
-                </div>
+                  {/* Photo container */}
+                  <div className="relative w-48 h-48 md:w-64 md:h-64 rounded-2xl bg-neutral-900 border border-neutral-800 overflow-hidden">
+                    <Image
+                      src="/profile2.jpeg"
+                      alt="A. Izzat Shafran Ashari"
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  </div>
 
-                {/* Status badge */}
-                <div
-                  className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs tracking-wide flex items-center gap-2 border"
-                  style={{
-                    backgroundColor: theme === "dark" ? "#171717" : "#ffffff",
-                    borderColor: theme === "dark" ? "#262626" : "#e5e5e5",
-                    color: theme === "dark" ? "#a3a3a3" : "#525252",
-                  }}
-                >
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                  Available for work
+                  {/* Status badge */}
+                  <div
+                    className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full text-xs tracking-wide flex items-center gap-2 border"
+                    style={{
+                      backgroundColor: theme === "dark" ? "#171717" : "#ffffff",
+                      borderColor: theme === "dark" ? "#262626" : "#e8e4dc",
+                      color: theme === "dark" ? "#a3a3a3" : "#5c574e",
+                    }}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    Available for work
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScaleIn>
 
             {/* Right side - Content */}
             <div className="flex flex-col text-center md:text-left">
               {/* Small label */}
-              <span className="text-neutral-500 text-sm tracking-widest uppercase mb-3">
-                Hello, I am
-              </span>
+              <FadeIn delay={0.3}>
+                <span className="text-neutral-500 text-sm tracking-widest uppercase mb-3 block">
+                  Hello, I am
+                </span>
+              </FadeIn>
 
               {/* Name */}
-              <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight leading-tight">
-                A. Izzat
-                <br />
-                <span className="text-neutral-400">Shafran Ashari</span>
-              </h1>
+              <FadeIn delay={0.4}>
+                <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 tracking-tight leading-tight">
+                  A. Izzat
+                  <br />
+                  <span className="text-neutral-400">Shafran Ashari</span>
+                </h1>
+              </FadeIn>
 
               {/* Typing effect role */}
-              <div className="h-8 mb-6 flex items-center justify-center md:justify-start">
-                <span
-                  className="text-lg font-medium"
-                  style={{ color: theme === "dark" ? "#ffffff" : "#171717" }}
-                >
-                  {typedText}
-                </span>
-                <span
-                  className="w-0.5 h-6 ml-1 animate-pulse"
-                  style={{ backgroundColor: theme === "dark" ? "#ffffff" : "#171717" }}
-                ></span>
-              </div>
+              <FadeIn delay={0.5}>
+                <div className="h-8 mb-6 flex items-center justify-center md:justify-start">
+                  <span
+                    className="text-lg font-medium"
+                    style={{ color: theme === "dark" ? "#ffffff" : "#2d2a26" }}
+                  >
+                    {typedText}
+                  </span>
+                  <span
+                    className="w-0.5 h-6 ml-1 animate-pulse"
+                    style={{ backgroundColor: theme === "dark" ? "#ffffff" : "#2d2a26" }}
+                  ></span>
+                </div>
+              </FadeIn>
 
               {/* Divider line */}
-              <div className="w-16 h-px bg-neutral-700 mb-6 mx-auto md:mx-0"></div>
+              <FadeIn delay={0.6}>
+                <div className="w-16 h-px bg-neutral-700 mb-6 mx-auto md:mx-0"></div>
+              </FadeIn>
 
               {/* Paragraph */}
-              <p className="text-neutral-400 text-lg leading-relaxed max-w-md">
-                I&apos;m a graphic designer and front-end developer with a strong eye
-                for aesthetics and detail. I enjoy creating visually appealing
-                and meaningful digital experiences that combine design and
-                functionality.
-              </p>
+              <FadeIn delay={0.7}>
+                <p className="text-neutral-400 text-lg leading-relaxed max-w-md">
+                  I&apos;m a graphic designer and front-end developer with a strong eye
+                  for aesthetics and detail. I enjoy creating visually appealing
+                  and meaningful digital experiences that combine design and
+                  functionality.
+                </p>
+              </FadeIn>
 
               {/* CTA Buttons */}
-              <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-start">
-                <a
-                  href="#contact"
-                  className="px-6 py-3 rounded-full text-sm tracking-wide transition-all duration-300 hover:scale-105"
-                  style={{
-                    backgroundColor: theme === "dark" ? "#ffffff" : "#171717",
-                    color: theme === "dark" ? "#171717" : "#ffffff",
-                  }}
-                >
-                  Get in Touch
-                </a>
-                <a
-                  href="#projects"
-                  className="px-6 py-3 rounded-full text-sm tracking-wide border transition-all duration-300 hover:scale-105"
-                  style={{
-                    borderColor: theme === "dark" ? "#404040" : "#d4d4d4",
-                    color: theme === "dark" ? "#ffffff" : "#171717",
-                  }}
-                >
-                  View Projects
-                </a>
-              </div>
+              <FadeIn delay={0.8}>
+                <div className="mt-8 flex flex-wrap gap-4 justify-center md:justify-start">
+                  <a
+                    href="#contact"
+                    className="px-6 py-3 rounded-full text-sm tracking-wide transition-all duration-300 hover:scale-105"
+                    style={{
+                      backgroundColor: theme === "dark" ? "#ffffff" : "#2d2a26",
+                      color: theme === "dark" ? "#171717" : "#faf8f5",
+                    }}
+                  >
+                    Get in Touch
+                  </a>
+                  <a
+                    href="#projects"
+                    className="px-6 py-3 rounded-full text-sm tracking-wide border transition-all duration-300 hover:scale-105"
+                    style={{
+                      borderColor: theme === "dark" ? "#404040" : "#ddd8ce",
+                      color: theme === "dark" ? "#ffffff" : "#2d2a26",
+                    }}
+                  >
+                    View Projects
+                  </a>
+                </div>
+              </FadeIn>
 
               {/* Minimal footer info */}
-              <div className="mt-8 flex items-center gap-6 text-sm text-neutral-600 justify-center md:justify-start">
-                <span>Intern | Ashari Tech</span>
-                <span className="w-1 h-1 rounded-full bg-neutral-700"></span>
-                <span>Based in Indonesia</span>
-              </div>
+              <FadeIn delay={0.9}>
+                <div className="mt-8 flex items-center gap-6 text-sm text-neutral-600 justify-center md:justify-start">
+                  <span>Intern | Ashari Tech</span>
+                  <span className="w-1 h-1 rounded-full bg-neutral-700"></span>
+                  <span>Based in Indonesia</span>
+                </div>
+              </FadeIn>
             </div>
           </div>
 
@@ -171,6 +190,12 @@ export default function Home() {
 
       {/* Chat Widget */}
       <ChatWidget />
+
+      {/* Spotify Widget */}
+      <SpotifyWidget />
+
+      {/* Back to Top Button */}
+      <BackToTop />
     </div>
   );
 }

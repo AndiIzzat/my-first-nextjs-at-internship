@@ -272,34 +272,29 @@ export default function ChatWidget() {
   const [isResizing, setIsResizing] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-
-  // Call state
-  const [isInCall, setIsInCall] = useState(false);
-  const [callDuration, setCallDuration] = useState(0);
-  const [isMuted, setIsMuted] = useState(false);
   const [isListening, setIsListening] = useState(false);
+
 
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const callTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const handleSendRef = useRef<((text?: string) => Promise<void>) | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
 
-  // Colors - aligned with portfolio theme (black & white)
+  // Colors - aligned with portfolio theme (Warm Cream for light mode)
   const colors = {
-    bg: theme === "dark" ? "#0a0a0a" : "#ffffff",
-    bgSecondary: theme === "dark" ? "#141414" : "#f5f5f5",
-    bgTertiary: theme === "dark" ? "#1a1a1a" : "#e5e5e5",
-    border: theme === "dark" ? "#262626" : "#e5e5e5",
-    text: theme === "dark" ? "#ededed" : "#171717",
-    textSecondary: theme === "dark" ? "#a3a3a3" : "#525252",
-    textMuted: theme === "dark" ? "#525252" : "#a3a3a3",
-    accent: theme === "dark" ? "#ffffff" : "#171717",
-    accentText: theme === "dark" ? "#000000" : "#ffffff",
-    timeline: theme === "dark" ? "#262626" : "#d4d4d4",
+    bg: theme === "dark" ? "#0a0a0a" : "#faf8f5",
+    bgSecondary: theme === "dark" ? "#141414" : "#f5f2ed",
+    bgTertiary: theme === "dark" ? "#1a1a1a" : "#ebe7e0",
+    border: theme === "dark" ? "#262626" : "#e8e4dc",
+    text: theme === "dark" ? "#ededed" : "#2d2a26",
+    textSecondary: theme === "dark" ? "#a3a3a3" : "#5c574e",
+    textMuted: theme === "dark" ? "#525252" : "#9c958a",
+    accent: theme === "dark" ? "#ffffff" : "#2d2a26",
+    accentText: theme === "dark" ? "#000000" : "#faf8f5",
+    timeline: theme === "dark" ? "#262626" : "#ddd8ce",
   };
 
   // File input ref for photo upload
@@ -422,6 +417,27 @@ export default function ChatWidget() {
     };
   }, []);
 
+  // Init speech recognition for voice-to-text
+  useEffect(() => {
+    const SpeechRecognition = (window as unknown as { SpeechRecognition?: new () => SpeechRecognition; webkitSpeechRecognition?: new () => SpeechRecognition }).SpeechRecognition ||
+      (window as unknown as { webkitSpeechRecognition?: new () => SpeechRecognition }).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = "en-US";
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0].transcript)
+          .join("");
+        setInputValue(transcript);
+      };
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -433,68 +449,6 @@ export default function ChatWidget() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  // Init speech recognition
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechAPI) {
-        recognitionRef.current = new SpeechAPI();
-        recognitionRef.current.continuous = false;
-        recognitionRef.current.interimResults = true;
-        recognitionRef.current.lang = "en-US";
-
-        recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
-          const results = Array.from(event.results);
-          const transcript = results.map((r) => r[0].transcript).join("");
-          setInputValue(transcript);
-
-          const lastResult = results[results.length - 1];
-          if (lastResult?.isFinal && recognitionRef.current?.continuous && transcript.trim()) {
-            setTimeout(() => {
-              setInputValue("");
-              window.dispatchEvent(new CustomEvent("voiceCallSend", { detail: transcript }));
-            }, 500);
-          }
-        };
-
-        recognitionRef.current.onend = () => {
-          setIsListening(false);
-          if (recognitionRef.current?.continuous) {
-            setTimeout(() => {
-              try {
-                recognitionRef.current?.start();
-                setIsListening(true);
-              } catch {}
-            }, 100);
-          }
-        };
-
-        recognitionRef.current.onerror = () => setIsListening(false);
-      }
-    }
-  }, []);
-
-  // Voice call send handler
-  useEffect(() => {
-    const handler = (event: CustomEvent) => {
-      if (isInCall && event.detail && handleSendRef.current) {
-        handleSendRef.current(event.detail);
-      }
-    };
-    window.addEventListener("voiceCallSend", handler as EventListener);
-    return () => window.removeEventListener("voiceCallSend", handler as EventListener);
-  }, [isInCall]);
-
-  // Call timer
-  useEffect(() => {
-    if (isInCall) {
-      callTimerRef.current = setInterval(() => setCallDuration((d) => d + 1), 1000);
-    } else {
-      if (callTimerRef.current) clearInterval(callTimerRef.current);
-      setCallDuration(0);
-    }
-    return () => { if (callTimerRef.current) clearInterval(callTimerRef.current); };
-  }, [isInCall]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -521,7 +475,7 @@ export default function ChatWidget() {
       // Ctrl/Cmd + Enter to send
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        handleSendRef.current?.();
+        handleSend();
       }
 
       // Ctrl/Cmd + K to search
@@ -727,7 +681,6 @@ export default function ChatWidget() {
 
   // Helpers
   const formatTime = (d: Date) => d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-  const formatDuration = (s: number) => `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 
   // Toast notification
   const showToast = (message: string) => {
@@ -757,57 +710,6 @@ export default function ChatWidget() {
       audioRef.current.play().catch(() => {});
     }
   };
-
-  const speak = useCallback((text: string) => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = 1;
-      u.pitch = 1;
-      window.speechSynthesis.speak(u);
-    }
-  }, []);
-
-  // Call functions
-  const startCall = useCallback(() => {
-    setIsInCall(true);
-    setIsMuted(false);
-    setShowDropdown(false);
-    if (recognitionRef.current) {
-      recognitionRef.current.continuous = true;
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch {}
-    }
-    speak("Hi! I'm Izzat Bot. How can I help you?");
-  }, [speak]);
-
-  const endCall = useCallback(() => {
-    setIsInCall(false);
-    setIsMuted(false);
-    setIsListening(false);
-    if (recognitionRef.current) {
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.stop();
-    }
-    window.speechSynthesis.cancel();
-  }, []);
-
-  const toggleMute = useCallback(() => {
-    setIsMuted((m) => {
-      if (!m && recognitionRef.current) {
-        recognitionRef.current.stop();
-        setIsListening(false);
-      } else if (m && recognitionRef.current && isInCall) {
-        try {
-          recognitionRef.current.start();
-          setIsListening(true);
-        } catch {}
-      }
-      return !m;
-    });
-  }, [isInCall]);
 
   // Send message
   const handleSend = async (text?: string) => {
@@ -867,12 +769,10 @@ export default function ChatWidget() {
           setUnreadCount((prev) => prev + 1);
         }
       }
-      if (isInCall) speak(responseText);
     } catch {
       setIsTyping(false);
       const errMsg: Message = { id: Date.now() + 1, text: "Sorry, connection error.", sender: "bot", timestamp: new Date() };
       setMessages((prev) => [...prev, errMsg]);
-      if (isInCall) speak("Sorry, connection error.");
     }
   };
 
@@ -929,8 +829,6 @@ export default function ChatWidget() {
 
   // Get message by id
   const getMessageById = (id: number) => messages.find((m) => m.id === id);
-
-  useEffect(() => { handleSendRef.current = handleSend; });
 
   // Actions
   const clearChat = () => {
@@ -1173,7 +1071,6 @@ export default function ChatWidget() {
                   className="absolute right-0 top-full mt-2 w-48 rounded-xl p-1.5 z-50"
                   style={{ backgroundColor: colors.bgSecondary, border: `1px solid ${colors.border}`, boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}
                 >
-                  <MenuItem icon="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" label="Voice Call" onClick={startCall} />
                   <MenuItem icon="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" label="Search" onClick={() => { setShowSearch(true); setShowDropdown(false); }} />
                   <MenuItem icon="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" label="Favorites" onClick={() => { setShowFavorites(true); setShowDropdown(false); }} />
                   <MenuItem icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" label="Statistics" onClick={() => { setShowStats(true); setShowDropdown(false); }} />
@@ -1200,79 +1097,6 @@ export default function ChatWidget() {
             )}
           </div>
         </div>
-
-        {/* Call Overlay - Portfolio theme */}
-        {isInCall && (
-          <div className="absolute inset-0 z-50 flex flex-col" style={{ backgroundColor: colors.accent }}>
-            {/* Call header */}
-            <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: `1px solid ${theme === "dark" ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)"}` }}>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-sm" style={{ color: colors.accentText, opacity: 0.8 }}>Voice Call</span>
-              </div>
-              <span className="font-mono" style={{ color: colors.accentText }}>{formatDuration(callDuration)}</span>
-            </div>
-
-            {/* Call content */}
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <div
-                className={`w-32 h-32 rounded-full overflow-hidden mb-6 ${isListening && !isMuted ? "ring-4 animate-pulse" : ""}`}
-                style={{
-                  border: `4px solid ${theme === "dark" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)"}`,
-                  ["--tw-ring-color" as string]: theme === "dark" ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.3)"
-                }}
-              >
-                <Image src="/profile2.jpeg" alt="Izzat" width={128} height={128} className="w-full h-full object-cover" />
-              </div>
-              <h2 className="text-2xl font-semibold mb-2" style={{ color: colors.accentText }}>Izzat Bot</h2>
-              <p style={{ color: colors.accentText, opacity: 0.7 }}>
-                {isTyping ? "Speaking..." : isListening && !isMuted ? "Listening..." : "Connected"}
-              </p>
-
-              {/* Voice transcript */}
-              {inputValue && (
-                <div className="mt-6 mx-8 p-4 rounded-2xl" style={{ backgroundColor: theme === "dark" ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)" }}>
-                  <p className="text-center" style={{ color: colors.accentText, opacity: 0.9 }}>{inputValue}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Call controls */}
-            <div className="pb-12 flex items-center justify-center gap-8">
-              <button
-                onClick={toggleMute}
-                className="w-14 h-14 rounded-full flex items-center justify-center transition-all"
-                style={{ backgroundColor: isMuted ? colors.bg : (theme === "dark" ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)") }}
-              >
-                <svg className="w-6 h-6" fill="none" stroke={isMuted ? colors.accent : colors.accentText} viewBox="0 0 24 24">
-                  {isMuted ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  )}
-                </svg>
-              </button>
-
-              <button
-                onClick={endCall}
-                className="w-16 h-16 rounded-full flex items-center justify-center bg-red-500 hover:bg-red-600 transition-colors"
-              >
-                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M5 3a2 2 0 00-2 2v1c0 8.284 6.716 15 15 15h1a2 2 0 002-2v-3.28a1 1 0 00-.684-.948l-4.493-1.498a1 1 0 00-1.21.502l-1.13 2.257a11.042 11.042 0 01-5.516-5.517l2.257-1.128a1 1 0 00.502-1.21L9.228 3.683A1 1 0 008.279 3H5z" />
-                </svg>
-              </button>
-
-              <button
-                className="w-14 h-14 rounded-full flex items-center justify-center"
-                style={{ backgroundColor: theme === "dark" ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)" }}
-              >
-                <svg className="w-6 h-6" fill="none" stroke={colors.accentText} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 6l-4 4H4v4h4l4 4V6z" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Search Overlay */}
         {showSearch && (
@@ -1633,20 +1457,6 @@ export default function ChatWidget() {
                             </button>
                             {msg.sender === "bot" && (
                               <>
-                                {/* Listen */}
-                                <button
-                                  onClick={() => speak(msg.text)}
-                                  className="icon-btn relative w-6 h-6 flex items-center justify-center rounded transition-transform duration-300 ease-out hover:scale-110 active:scale-95"
-                                  style={{ color: colors.textMuted }}
-                                  title="Listen"
-                                >
-                                  <svg className="icon-default w-3.5 h-3.5 absolute transition-all duration-300 ease-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M12 6l-4 4H4v4h4l4 4V6z" />
-                                  </svg>
-                                  <svg className="icon-hover w-3.5 h-3.5 absolute transition-all duration-300 ease-out" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" />
-                                  </svg>
-                                </button>
                                 {/* Regenerate */}
                                 <button
                                   onClick={() => regenerateResponse(msg.id)}
@@ -2021,7 +1831,7 @@ export default function ChatWidget() {
             setUnreadCount(0); // Clear unread when opening
           }
         }}
-        className={`fixed z-50 rounded-full flex items-center justify-center transition-all hover:scale-105 active:scale-95 ${
+        className={`fixed z-50 rounded-full flex items-center justify-center transition-all duration-300 ease-out hover:scale-105 active:scale-95 group ${
           isMobile ? "bottom-4 right-4 w-12 h-12" : "bottom-6 right-6 w-14 h-14"
         } ${isOpen && isMobile ? "opacity-0 pointer-events-none" : "opacity-100"}`}
         style={{
@@ -2032,20 +1842,45 @@ export default function ChatWidget() {
         {/* Unread badge */}
         {!isOpen && unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center animate-bounce"
+            className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center animate-bounce z-10"
             style={{ backgroundColor: "#ef4444", color: "#fff" }}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
         {isOpen ? (
-          <svg className={isMobile ? "w-5 h-5" : "w-6 h-6"} fill="none" stroke={theme === "dark" ? "#000000" : "#ffffff"} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <>
+            {/* Default X icon */}
+            <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} absolute transition-all duration-300 opacity-100 group-hover:opacity-0 group-hover:scale-75`} fill="none" stroke={theme === "dark" ? "#000000" : "#ffffff"} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            {/* Hover - Chevron down icon */}
+            <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} absolute transition-all duration-300 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100`} fill="none" stroke={theme === "dark" ? "#000000" : "#ffffff"} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 9l-7 7-7-7" />
+            </svg>
+          </>
         ) : (
-          <svg className={isMobile ? "w-5 h-5" : "w-6 h-6"} fill="none" stroke={theme === "dark" ? "#000000" : "#ffffff"} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
+          <>
+            {/* Default chat icon */}
+            <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} absolute transition-all duration-300 opacity-100 group-hover:opacity-0 group-hover:scale-75`} fill="none" stroke={theme === "dark" ? "#000000" : "#ffffff"} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            {/* Hover - Bot/Robot icon */}
+            <svg className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} absolute transition-all duration-300 opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100`} fill="none" stroke={theme === "dark" ? "#000000" : "#ffffff"} viewBox="0 0 24 24">
+              {/* Antenna */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 2v3" />
+              <circle cx="12" cy="2" r="1" fill={theme === "dark" ? "#000000" : "#ffffff"} />
+              {/* Head */}
+              <rect x="4" y="5" width="16" height="12" rx="2" strokeWidth={1.5} />
+              {/* Eyes */}
+              <circle cx="9" cy="11" r="1.5" fill={theme === "dark" ? "#000000" : "#ffffff"} />
+              <circle cx="15" cy="11" r="1.5" fill={theme === "dark" ? "#000000" : "#ffffff"} />
+              {/* Ears */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2 10v4M22 10v4" />
+              {/* Body hint */}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 17v3M16 17v3" />
+            </svg>
+          </>
         )}
       </button>
     </>
