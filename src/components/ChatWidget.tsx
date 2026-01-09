@@ -3328,18 +3328,18 @@ export default function ChatWidget() {
             setUnreadCount(0);
           }
         }}
-        className={`chat-fab fixed z-50 rounded-full flex items-center justify-center ${
+        className={`chat-fab fixed z-50 rounded-full flex items-center justify-center cursor-pointer ${
           isMobile ? "bottom-4 right-4 w-12 h-12" : "bottom-6 right-6 w-14 h-14"
         } ${isOpen && isMobile ? "opacity-0 pointer-events-none" : "opacity-100"}`}
         style={{
           backgroundColor: theme === "dark" ? "#ffffff" : "#000000",
-          boxShadow: theme === "dark" ? "0 4px 20px rgba(255,255,255,0.2)" : "0 4px 20px rgba(0,0,0,0.3)",
+          boxShadow: theme === "dark" ? "0 4px 20px rgba(255,255,255,0.15)" : "0 4px 20px rgba(0,0,0,0.25)",
         }}
       >
         {/* Unread badge */}
         {!isOpen && unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center animate-bounce z-10"
+            className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center z-10"
             style={{ backgroundColor: "#ef4444", color: "#fff" }}
           >
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -3347,7 +3347,7 @@ export default function ChatWidget() {
         )}
         {/* Icon */}
         <svg
-          className={`${isMobile ? "w-5 h-5" : "w-6 h-6"}`}
+          className={`${isMobile ? "w-5 h-5" : "w-6 h-6"} pointer-events-none`}
           fill="none"
           stroke={theme === "dark" ? "#000000" : "#ffffff"}
           viewBox="0 0 24 24"

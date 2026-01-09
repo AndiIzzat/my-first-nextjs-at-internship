@@ -576,16 +576,15 @@ html.light ::selection {
   animation: sparkle 1.5s ease-in-out infinite;
 }
 
-/* Chat FAB button - clean hover animation */
+/* Chat FAB button - stable hover animation */
 .chat-fab {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
-.chat-fab:hover {
-  transform: scale(1.08);
-}
-
-.chat-fab:active {
-  transform: scale(0.95);
+.chat-fab::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
 }
