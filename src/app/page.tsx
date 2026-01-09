@@ -9,6 +9,8 @@ import Projects from "@/components/Projects";
 import Experience from "@/components/Experience";
 import Achievement from "@/components/Achievement";
 import Contact from "@/components/Contact";
+import GitHubStats from "@/components/GitHubStats";
+import BlogSection from "@/components/BlogSection";
 import ChatWidget from "@/components/ChatWidget";
 import SpotifyWidget from "@/components/SpotifyWidget";
 import LoadingScreen from "@/components/LoadingScreen";
@@ -174,6 +176,9 @@ export default function Home() {
       {/* About Section */}
       <About />
 
+      {/* GitHub Stats Section */}
+      <GitHubStats />
+
       {/* Experience Section */}
       <Experience />
 
@@ -182,6 +187,9 @@ export default function Home() {
 
       {/* Projects Section */}
       <Projects />
+
+      {/* Blog Section */}
+      <BlogSection />
 
       {/* Achievement Section */}
       <Achievement />

@@ -1,0 +1,64 @@
+---
+title: "Building My Portfolio with Next.js"
+date: "2025-01-07"
+excerpt: "A technical deep dive into how I built this portfolio website using Next.js and modern web technologies."
+tags: ["Next.js", "React", "Web Development"]
+---
+
+## Why Next.js?
+
+When I decided to build my portfolio, I had several options. After careful consideration, I chose **Next.js** for several reasons:
+
+- Server-side rendering for better SEO
+- Excellent developer experience
+- Built-in routing system
+- Great performance out of the box
+
+## Tech Stack
+
+Here's the complete tech stack I used:
+
+```
+- Next.js 16
+- React 19
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+```
+
+## Key Features
+
+### 1. Theme System
+
+I implemented a dark/light mode toggle that persists across sessions:
+
+```typescript
+const { theme, setTheme } = useTheme();
+```
+
+### 2. Animations
+
+Using Framer Motion, I added smooth animations throughout the site:
+
+- Page transitions
+- Scroll-triggered animations
+- Hover effects
+
+### 3. AI Chat Widget
+
+One of the unique features is the AI-powered chat widget that uses Google's Gemini API.
+
+## Lessons Learned
+
+Building this portfolio taught me a lot about:
+
+1. State management in React
+2. CSS-in-JS vs utility-first CSS
+3. API integration
+4. Performance optimization
+
+## Conclusion
+
+Building a portfolio is not just about showcasing your work - it's also an opportunity to learn new technologies and push your skills to the next level.
+
+Feel free to explore the code on my [GitHub](https://github.com/AndiIzzat)!

@@ -5,6 +5,10 @@
   --foreground: #171717;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Light mode variables - Warm Cream palette */
 html.light {
   --background: #faf8f5;
@@ -36,7 +40,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
-  scroll-behavior: smooth;
 }
 
 /* Light mode overrides for main page background - Warm Cream */
@@ -371,6 +374,68 @@ html.light .shadow-lg {
   animation: scale-in 0.3s ease-out forwards;
 }
 
+/* Icon button hover animation - swap icons */
+.icon-btn .icon-default,
+.icon-btn .icon-hover {
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+
+.icon-btn .icon-default {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.icon-btn .icon-hover {
+  opacity: 0;
+  transform: scale(0.85) rotate(-8deg);
+}
+
+.icon-btn:hover .icon-default {
+  opacity: 0;
+  transform: scale(0.85) rotate(8deg);
+}
+
+.icon-btn:hover .icon-hover {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+/* Dropdown dots - smooth spread on hover */
+.dropdown-btn:hover .dropdown-dot-1 {
+  transform: translateY(-2px);
+}
+.dropdown-btn:hover .dropdown-dot-3 {
+  transform: translateY(2px);
+}
+.dropdown-dot-1, .dropdown-dot-2, .dropdown-dot-3 {
+  transition: transform 0.3s ease-out;
+}
+
+/* Close button - smooth rotation */
+.close-btn svg {
+  transition: transform 0.3s ease-out;
+}
+.close-btn:hover svg {
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Menu item icon - smooth rotate */
+.menu-icon {
+  transition: transform 0.3s ease-out;
+}
+.menu-item:hover .menu-icon {
+  transform: rotate(-10deg) scale(1.15);
+}
+
+/* Menu text - smooth slide */
+.menu-text {
+  transition: transform 0.2s ease-out;
+}
+.menu-item:hover .menu-text {
+  transform: translateX(2px);
+}
+
 /* Smooth underline on hover */
 .hover-underline {
   position: relative;
@@ -448,4 +513,65 @@ html.dark ::selection {
 html.light ::selection {
   background: rgba(45, 42, 38, 0.15);
   color: var(--cream-text);
+}
+
+/* Confetti celebration animation */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti-fall 3s ease-out forwards;
+}
+
+/* Bounce in animation for celebration text */
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s ease-out forwards;
+}
+
+/* Rainbow gradient animation for special buttons */
+@keyframes rainbow-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-rainbow {
+  background: linear-gradient(90deg, #f43f5e, #8b5cf6, #06b6d4, #22c55e, #f59e0b, #f43f5e);
+  background-size: 200% 200%;
+  animation: rainbow-shift 3s ease infinite;
+}
+
+/* Sparkle animation */
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+.animate-sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
 }

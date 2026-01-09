@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { motion } from "framer-motion";
+import { FadeIn } from "@/components/PageTransition";
 
 const services = [
   {
@@ -47,69 +48,73 @@ const services = [
 ];
 
 export default function Services() {
-  const { ref, isVisible } = useScrollAnimation<HTMLElement>();
-
   return (
-    <section id="services" className="relative py-24 md:py-32" ref={ref}>
+    <section id="services" className="relative py-24 md:py-32">
       <div className="max-w-5xl mx-auto px-8 md:px-12">
         {/* Section Header */}
-        <div
-          className={`mb-12 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          <span className="text-neutral-500 text-sm tracking-widest uppercase mb-3 block">
-            What I do
-          </span>
-          <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-            Services<span className="text-neutral-500">.</span>
-          </h2>
-        </div>
+        <FadeIn delay={0}>
+          <div className="mb-12">
+            <span className="text-neutral-500 text-sm tracking-widest uppercase mb-3 block">
+              What I do
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+              Services<span className="text-neutral-500">.</span>
+            </h2>
+          </div>
+        </FadeIn>
 
         {/* Services Grid */}
         <div className="grid md:grid-cols-2 gap-6">
           {services.map((service, index) => (
-            <Link
+            <motion.div
               key={service.title}
-              href={service.href}
-              className={`group relative p-8 rounded-2xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 transition-all duration-500 hover:-translate-y-1 block ${
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: isVisible ? `${index * 100}ms` : "0ms" }}
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{
+                duration: 0.5,
+                delay: index * 0.1,
+                ease: [0.25, 0.1, 0.25, 1],
+              }}
             >
-              {/* Hover glow effect */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-neutral-800/0 to-neutral-700/0 group-hover:from-neutral-800/50 group-hover:to-neutral-700/30 transition-all duration-500"></div>
+              <Link
+                href={service.href}
+                className="group relative p-8 rounded-2xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 transition-all duration-500 hover:-translate-y-1 block h-full"
+              >
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-neutral-800/0 to-neutral-700/0 group-hover:from-neutral-800/50 group-hover:to-neutral-700/30 transition-all duration-500"></div>
 
-              <div className="relative z-10">
-                {/* Icon */}
-                <div className="w-14 h-14 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-400 group-hover:text-white group-hover:border-neutral-600 group-hover:bg-neutral-700 transition-all duration-300 mb-6">
-                  {service.icon}
+                <div className="relative z-10">
+                  {/* Icon */}
+                  <div className="w-14 h-14 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-400 group-hover:text-white group-hover:border-neutral-600 group-hover:bg-neutral-700 transition-all duration-300 mb-6">
+                    {service.icon}
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-neutral-100 transition-colors">
+                    {service.title}
+                  </h3>
+
+                  {/* Description */}
+                  <p className="text-neutral-400 leading-relaxed group-hover:text-neutral-300 transition-colors">
+                    {service.description}
+                  </p>
+
+                  {/* Arrow indicator */}
+                  <div className="mt-6 flex items-center gap-2 text-neutral-500 group-hover:text-white transition-all duration-300">
+                    <span className="text-sm">View projects</span>
+                    <svg
+                      className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                  </div>
                 </div>
-
-                {/* Title */}
-                <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-neutral-100 transition-colors">
-                  {service.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-neutral-400 leading-relaxed group-hover:text-neutral-300 transition-colors">
-                  {service.description}
-                </p>
-
-                {/* Arrow indicator */}
-                <div className="mt-6 flex items-center gap-2 text-neutral-500 group-hover:text-white transition-all duration-300">
-                  <span className="text-sm">View projects</span>
-                  <svg
-                    className="w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-300"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </div>
-              </div>
-            </Link>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </div>

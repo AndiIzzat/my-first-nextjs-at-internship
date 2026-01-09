@@ -1,6 +1,7 @@
 "use client";
 
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { motion } from "framer-motion";
+import { FadeIn } from "@/components/PageTransition";
 
 const achievements = [
   {
@@ -63,34 +64,35 @@ const iconComponents = {
 };
 
 export default function Achievement() {
-  const { ref, isVisible } = useScrollAnimation<HTMLElement>();
-
   return (
-    <section id="achievement" className="relative py-24 md:py-32" ref={ref}>
+    <section id="achievement" className="relative py-24 md:py-32">
       <div className="max-w-5xl mx-auto px-8 md:px-12">
         {/* Section Header */}
-        <div
-          className={`mb-12 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
-        >
-          <span className="text-neutral-500 text-sm tracking-widest uppercase mb-3 block">
-            Recognition & Awards
-          </span>
-          <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
-            Achievement<span className="text-neutral-500">.</span>
-          </h2>
-        </div>
+        <FadeIn delay={0}>
+          <div className="mb-12">
+            <span className="text-neutral-500 text-sm tracking-widest uppercase mb-3 block">
+              Recognition & Awards
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
+              Achievement<span className="text-neutral-500">.</span>
+            </h2>
+          </div>
+        </FadeIn>
 
         {/* Achievement Grid */}
         <div className="grid md:grid-cols-2 gap-6">
           {achievements.map((achievement, index) => (
-            <div
+            <motion.div
               key={index}
-              className={`group relative p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 transition-all duration-500 hover:bg-neutral-900/80 ${
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              }`}
-              style={{ transitionDelay: isVisible ? `${index * 100 + 100}ms` : "0ms" }}
+              initial={{ opacity: 0, y: 40, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{
+                duration: 0.5,
+                delay: index * 0.1,
+                ease: [0.25, 0.1, 0.25, 1],
+              }}
+              className="group relative p-6 rounded-2xl bg-neutral-900/50 border border-neutral-800 hover:border-neutral-700 transition-all duration-500 hover:bg-neutral-900/80"
             >
               {/* Year Badge */}
               <div className="absolute top-4 right-4">
@@ -115,15 +117,21 @@ export default function Achievement() {
 
               {/* Hover Glow Effect */}
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-            </div>
+            </motion.div>
           ))}
         </div>
 
         {/* Bottom Stats */}
-        <div
-          className={`mt-12 flex flex-wrap justify-center gap-8 md:gap-16 transition-all duration-700 delay-500 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{
+            duration: 0.5,
+            delay: 0.4,
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
+          className="mt-12 flex flex-wrap justify-center gap-8 md:gap-16"
         >
           <div className="text-center">
             <div className="text-3xl md:text-4xl font-bold text-white">4+</div>
@@ -143,7 +151,7 @@ export default function Achievement() {
               Competitions
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,5 +1,42 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
+import { generateImage, generateImageFromImage, generateAnimation, ImageGenerationOptions } from "@/lib/image-generator";
+
+// Increase timeout for image generation (60 seconds)
+export const maxDuration = 60;
+
+// Helper function for retry with exponential backoff
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: unknown) {
+      lastError = error;
+      const errorStr = String(error).toLowerCase() + JSON.stringify(error).toLowerCase();
+      // Retry on rate limit OR overloaded errors
+      if (
+        errorStr.includes("429") ||
+        errorStr.includes("resource_exhausted") ||
+        errorStr.includes("quota") ||
+        errorStr.includes("503") ||
+        errorStr.includes("overloaded") ||
+        errorStr.includes("unavailable")
+      ) {
+        const delay = initialDelay * Math.pow(2, i); // 1s, 2s, 4s
+        console.log(`API error, retrying in ${delay}ms (attempt ${i + 1}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        throw error; // Other errors, don't retry
+      }
+    }
+  }
+  throw lastError;
+}
 
 const SYSTEM_PROMPT = `You are Izzat Bot, a friendly and helpful virtual assistant representing Andi Izzat Shafran Ashari.
 
@@ -16,7 +53,7 @@ LinkedIn: linkedin.com/in/izzatshafran
 Portfolio: Check the Projects section on this website
 
 === PROFILE SUMMARY ===
-A passionate graphic designer who pays close attention to aesthetics and detail. Enjoys creating visuals that are not only visually appealing but also meaningful and functional. Experienced in branding, typography, layout design, and social media content creation. Comfortable working under deadlines, collaborating with teams, and presenting design results professionally.
+A passionate graphic designer who pays close attention to aesthetics and detail. Enjoys creating visuals that are not only visually appealing but also meaningful and functional. Experienced in branding, typography, layout design, and social media content design. Comfortable working under deadlines, collaborating with teams, and presenting design results professionally.
 
 === EDUCATION ===
 1. SMK Telkom Makassar (2023 – Present, Grade XII)
@@ -128,7 +165,7 @@ Soft Skills: Communication, Time Management, Teamwork, Presentation Skills
 - If user says "quiz me": Ask a fun question about design or Izzat
 - If user says "motivate me": Share an inspiring quote
 - If user says "what's your favorite color": "Izzat loves working with monochromatic palettes, especially black and white with accent colors!"
-- If user types "konami" or "easter egg": "🎮 You found a secret! Izzat is also a casual gamer who enjoys puzzle and strategy games!"
+- If user types "konami" or "easter egg": "You found a secret! Izzat is also a casual gamer who enjoys puzzle and strategy games!"
 
 === DESIGN/PROGRAMMING JOKES ===
 1. "Why do designers always feel cold? Because they're surrounded by drafts!"
@@ -144,7 +181,7 @@ Soft Skills: Communication, Time Management, Teamwork, Presentation Skills
 4. "What framework did Izzat use for SEEDS project? (Answer: Laravel)"
 
 === HOROSCOPE / ZODIAC ===
-Izzat's Zodiac: Pisces ♓ (February 25)
+Izzat's Zodiac: Pisces (February 25)
 Pisces Traits that match Izzat:
 - Creative and artistic (perfect for design!)
 - Intuitive and empathetic
@@ -163,7 +200,7 @@ If user asks about horoscope/zodiac, share fun Pisces facts and how they relate 
 
 2. "roast me" or "roast izzat":
    - Give a FRIENDLY, PLAYFUL roast (not mean!)
-   - Examples: "Oh, you use Canva? That's cute 😏", "Let me guess, you think Comic Sans is a personality?"
+   - Examples: "Oh, you use Canva? That's cute", "Let me guess, you think Comic Sans is a personality?"
    - Keep it light and funny, never offensive
 
 3. "compliment me" or "hype me up":
@@ -206,6 +243,23 @@ Learning Platforms:
 
 Inspiration:
 - Dribbble, Behance, Awwwards, Pinterest, Mobbin
+
+=== IMAGE GENERATION CAPABILITY ===
+IMPORTANT: You have the ability to generate images using the generate_image tool.
+- When user asks to create, generate, draw, make, or produce an image, USE the generate_image tool
+- When user says things like "create an image of...", "generate a picture of...", "draw me a...", "make an image...", USE the generate_image tool
+- Before calling the tool, briefly explain what you're about to create
+- Create a detailed English prompt for the image generation
+- After the image is generated, provide a friendly message about the result
+
+=== IMAGE EDITING CAPABILITY ===
+IMPORTANT: You can also EDIT previously generated images!
+- When user says "edit the image", "modify the image", "change the image", "add to the image", USE the generate_image tool with a MODIFIED prompt
+- Look at the conversation history to find the previous image prompt
+- Combine the original prompt with the user's edit request to create a new detailed prompt
+- Example: If original was "a cat" and user says "add a hat", create prompt: "a cat wearing a hat"
+- Always acknowledge that you're editing/modifying the previous image
+- The edited image will be a new generation based on the combined description
 
 === GUIDELINES ===
 - Always be helpful and friendly
@@ -266,7 +320,7 @@ const getRealtimeInfo = () => {
 
   // Check if today is Izzat's birthday
   const isBirthday = makassarTime.getMonth() === 1 && makassarTime.getDate() === 25;
-  const birthdayNote = isBirthday ? "🎂 TODAY IS IZZAT'S BIRTHDAY! Wish him a happy birthday!" : "";
+  const birthdayNote = isBirthday ? "TODAY IS IZZAT'S BIRTHDAY! Wish him a happy birthday!" : "";
 
   // Days until next birthday
   const nextBirthday = new Date(makassarTime.getFullYear(), 1, 25);
@@ -289,6 +343,46 @@ INSTRUCTION: Use the suggested greeting naturally when user says hi/hello. For e
 `;
 };
 
+// Advanced Image generation tools declaration - Multiple tools for different use cases
+const generateImageTool = {
+  functionDeclarations: [
+    {
+      name: "generate_image",
+      description: "Generate a new image from text description. Use when user asks to create, generate, draw, design, or make an image/picture/photo/illustration. Can also edit existing images when user says 'edit', 'change', 'modify' the image. Can enhance simple prompts for better results.",
+      parameters: {
+        type: Type.OBJECT,
+        properties: {
+          prompt: {
+            type: Type.STRING,
+            description: "Detailed image description in English. Be specific about subject, style, colors, mood, lighting, and composition.",
+          },
+          style: {
+            type: Type.STRING,
+            description: "Art style for the image: realistic, anime, cartoon, digital-art, oil-painting, watercolor, sketch, 3d-render, pixel-art, minimalist",
+          },
+          aspect_ratio: {
+            type: Type.STRING,
+            description: "Image aspect ratio: 1:1 (square), 16:9 (landscape), 9:16 (portrait), 4:3, 3:4",
+          },
+          mood: {
+            type: Type.STRING,
+            description: "Overall mood/atmosphere: happy, dark, peaceful, energetic, mysterious, romantic, dramatic, whimsical",
+          },
+          is_edit: {
+            type: Type.BOOLEAN,
+            description: "Set to true if this is editing a previous image",
+          },
+          edit_instruction: {
+            type: Type.STRING,
+            description: "If editing, what to change (e.g., 'add a hat', 'change background to beach')",
+          },
+        },
+        required: ["prompt"],
+      },
+    },
+  ],
+};
+
 interface HistoryMessage {
   text: string;
   sender: "user" | "bot";
@@ -297,12 +391,65 @@ interface HistoryMessage {
 interface ChatRequest {
   message: string;
   history?: HistoryMessage[];
-  image?: string; // base64 image data
+  image?: string; // base64 image data for vision
+  // Image generation options
+  imageOptions?: {
+    aspectRatio?: "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
+    negativePrompt?: string;
+    referenceImage?: string; // For image-to-image
+    isAnimation?: boolean; // For GIF generation
+  };
+}
+
+// Detect if message is asking for image generation
+function isImageGenerationRequest(message: string): boolean {
+  const lowerMsg = message.toLowerCase();
+  const generateKeywords = ["generate", "create", "make", "draw", "design", "buat", "bikin", "gambar", "buatkan", "gambarin", "tolong buat", "coba buat"];
+  const imageKeywords = ["image", "picture", "photo", "gambar", "foto", "illustration", "art", "artwork", "visual"];
+
+  // Check for generate + image combination
+  const hasGenerateWord = generateKeywords.some(k => lowerMsg.includes(k));
+  const hasImageWord = imageKeywords.some(k => lowerMsg.includes(k));
+
+  // Also check for direct patterns
+  const directPatterns = [
+    /generate\s+(an?\s+)?image/i,
+    /create\s+(an?\s+)?image/i,
+    /make\s+(an?\s+)?image/i,
+    /draw\s+(an?\s+)?/i,
+    /buat(kan)?\s+gambar/i,
+    /gambar(in|kan)?\s+/i,
+    /bikin\s+gambar/i,
+  ];
+
+  const hasDirectPattern = directPatterns.some(p => p.test(lowerMsg));
+
+  return (hasGenerateWord && hasImageWord) || hasDirectPattern;
+}
+
+// Extract image prompt from message
+function extractImagePrompt(message: string): string {
+  const lowerMsg = message.toLowerCase();
+
+  // Remove common prefixes to get the actual prompt
+  let prompt = message;
+  const prefixPatterns = [
+    /^(please\s+)?(can you\s+)?(generate|create|make|draw|design)\s+(an?\s+)?(image|picture|photo|illustration|art)\s+(of\s+)?/i,
+    /^(tolong\s+)?(buat(kan)?|bikin|gambar(in|kan)?)\s+(gambar\s+)?/i,
+    /^edit\s+the\s+(previous\s+)?image:?\s*/i,
+    /^edit\s+gambar:?\s*/i,
+  ];
+
+  for (const pattern of prefixPatterns) {
+    prompt = prompt.replace(pattern, "");
+  }
+
+  return prompt.trim() || message;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, history, image }: ChatRequest = await request.json();
+    const { message, history, image, imageOptions }: ChatRequest = await request.json();
 
     if ((!message || typeof message !== "string") && !image) {
       return NextResponse.json(
@@ -311,6 +458,83 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if this is an image generation request - use Pollinations directly (NO Gemini needed!)
+    if (message && isImageGenerationRequest(message)) {
+      try {
+        const imagePrompt = extractImagePrompt(message);
+        console.log("Direct image generation with Pollinations:", imagePrompt);
+
+        // Build generation options
+        const genOptions: ImageGenerationOptions = {
+          prompt: imagePrompt,
+          aspectRatio: imageOptions?.aspectRatio || "1:1",
+          negativePrompt: imageOptions?.negativePrompt,
+        };
+
+        let generatedImage: string | null = null;
+        let responseMessage = "";
+
+        // Check if this is animation request
+        if (imageOptions?.isAnimation) {
+          console.log("Generating animation...");
+          generatedImage = await generateAnimation(imagePrompt, genOptions);
+          responseMessage = `Here's the animation I created for "${imagePrompt}"! 🎬`;
+        }
+        // Check if this is image-to-image request
+        else if (imageOptions?.referenceImage) {
+          console.log("Generating image-to-image...");
+          generatedImage = await generateImageFromImage(imageOptions.referenceImage, imagePrompt, genOptions);
+          responseMessage = `Here's the transformed image based on your reference! 🎨`;
+        }
+        // Regular image generation
+        else {
+          generatedImage = await generateImage(genOptions);
+          responseMessage = `Here's the image I created for "${imagePrompt}"! 🎨`;
+        }
+
+        if (generatedImage) {
+          return NextResponse.json({
+            success: true,
+            response: responseMessage,
+            image: generatedImage,
+            isImageGeneration: true,
+            isAnimation: imageOptions?.isAnimation || false,
+          });
+        } else {
+          return NextResponse.json({
+            success: true,
+            response: "Sorry, I couldn't generate that image. Please try with a different description!",
+          });
+        }
+      } catch (imageError) {
+        console.error("Direct image generation failed:", imageError);
+        const errorMessage = imageError instanceof Error ? imageError.message : "Unknown error";
+        const errorStr = errorMessage.toLowerCase();
+
+        // Check for rate limit / quota errors
+        if (errorStr.includes("limit") || errorStr.includes("quota") || errorStr.includes("429")) {
+          return NextResponse.json({
+            success: true,
+            response: "Sorry, I can't generate images right now - the free image generation quota has been exceeded. 😅 Please try again in about 1 hour. But I can still chat with you in the meantime!",
+          });
+        }
+
+        // Check for timeout errors
+        if (errorStr.includes("timeout") || errorStr.includes("timed out")) {
+          return NextResponse.json({
+            success: true,
+            response: "The image is taking too long to generate. 🕐 The server might be busy. Please try again with a simpler description!",
+          });
+        }
+
+        return NextResponse.json({
+          success: true,
+          response: `Sorry, I couldn't generate that image. ${errorMessage}`,
+        });
+      }
+    }
+
+    // Regular chat - use Gemini API
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
         { error: "API key not configured" },
@@ -332,15 +556,21 @@ export async function POST(request: NextRequest) {
     // Get realtime information
     const realtimeInfo = getRealtimeInfo();
 
-    // Create the full prompt with system instruction, realtime info, and context
-    const textPrompt = `${SYSTEM_PROMPT}
-${realtimeInfo}
-${conversationContext ? `Previous conversation:\n${conversationContext}\n\n` : ""}User: ${message || "What do you see in this image?"}
+    // Build contents array for the API
+    const systemContent = { role: "user" as const, parts: [{ text: SYSTEM_PROMPT + realtimeInfo }] };
 
-Izzat Bot:`;
+    // Build history contents
+    const historyContents = history?.map((msg) => ({
+      role: msg.sender === "user" ? "user" as const : "model" as const,
+      parts: [{ text: msg.text }],
+    })) || [];
 
-    // Build content parts
-    let contents: string | { text?: string; inlineData?: { mimeType: string; data: string } }[];
+    // Build current message content
+    let currentMessageParts: { text?: string; inlineData?: { mimeType: string; data: string } }[] = [];
+
+    if (message) {
+      currentMessageParts.push({ text: message });
+    }
 
     if (image) {
       // Extract base64 data and mime type from data URL
@@ -348,25 +578,119 @@ Izzat Bot:`;
       if (matches) {
         const mimeType = matches[1];
         const base64Data = matches[2];
-        contents = [
-          { text: textPrompt },
-          { inlineData: { mimeType, data: base64Data } }
-        ];
-      } else {
-        contents = textPrompt;
+        currentMessageParts.push({ inlineData: { mimeType, data: base64Data } });
+        if (!message) {
+          currentMessageParts.unshift({ text: "What do you see in this image?" });
+        }
       }
-    } else {
-      contents = textPrompt;
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: contents,
-    });
+    const currentMessage = { role: "user" as const, parts: currentMessageParts };
 
+    // Make API call with advanced tools (with retry for rate limits)
+    const response = await withRetry(() =>
+      ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [
+          systemContent,
+          ...historyContents,
+          currentMessage,
+        ],
+        config: {
+          tools: [generateImageTool],
+        },
+      })
+    );
+
+    // Check if AI wants to call any image-related function
+    const functionCalls = response.functionCalls;
+
+    if (functionCalls?.length && functionCalls[0].name === "generate_image") {
+      const args = functionCalls[0].args as {
+        prompt?: string;
+        style?: string;
+        aspect_ratio?: string;
+        mood?: string;
+        is_edit?: boolean;
+        edit_instruction?: string;
+      };
+
+      let imagePrompt = args.prompt || "";
+
+      if (!imagePrompt) {
+        return NextResponse.json({
+          success: true,
+          response: "I'd love to generate an image for you, but I need more details about what you'd like me to create. Can you describe the image you want?",
+        });
+      }
+
+      // Enhance prompt with style and mood if provided
+      if (args.style) {
+        imagePrompt = `${imagePrompt}, ${args.style} style`;
+      }
+      if (args.mood) {
+        imagePrompt = `${imagePrompt}, ${args.mood} mood/atmosphere`;
+      }
+
+      // Handle edit mode
+      const isEditMode = args.is_edit || false;
+      if (isEditMode && args.edit_instruction) {
+        imagePrompt = `${imagePrompt}, ${args.edit_instruction}`;
+      }
+
+      try {
+        const genOptions: ImageGenerationOptions = {
+          prompt: imagePrompt,
+          aspectRatio: (args.aspect_ratio as "1:1" | "16:9" | "9:16" | "4:3" | "3:4") || "1:1",
+        };
+
+        const generatedImage = await generateImage(genOptions);
+
+        if (generatedImage) {
+          // Build response message with metadata
+          let responseMsg = isEditMode
+            ? `Here's the edited image! ✏️`
+            : `Here's the image I created for you!`;
+
+          // Add style/mood info
+          const metadata: string[] = [];
+          if (args.style) metadata.push(`Style: ${args.style}`);
+          if (args.mood) metadata.push(`Mood: ${args.mood}`);
+          if (args.aspect_ratio && args.aspect_ratio !== "1:1") metadata.push(`Ratio: ${args.aspect_ratio}`);
+
+          if (metadata.length > 0) {
+            responseMsg += ` 🎨 ${metadata.join(" | ")}`;
+          }
+
+          return NextResponse.json({
+            success: true,
+            response: responseMsg,
+            image: generatedImage,
+            isImageGeneration: true,
+            isEdit: isEditMode,
+            imageMetadata: {
+              prompt: imagePrompt,
+              style: args.style,
+              aspectRatio: args.aspect_ratio,
+              mood: args.mood,
+            },
+          });
+        } else {
+          return NextResponse.json({
+            success: true,
+            response: "I tried to generate the image, but something went wrong. Could you try describing it differently?",
+          });
+        }
+      } catch (imageError: unknown) {
+        console.error("Image generation failed:", imageError);
+        return handleImageError(imageError);
+      }
+    }
+
+    // Regular text response
     const responseText = response.text || "I apologize, I couldn't generate a response. Please try again.";
 
-    return NextResponse.json({ response: responseText });
+    return NextResponse.json({ success: true, response: responseText });
   } catch (error: unknown) {
     console.error("Gemini API Error:", error);
 
@@ -403,7 +727,7 @@ Izzat Bot:`;
       return NextResponse.json(
         {
           error: "rate_limit",
-          response: `I'm taking a short break! The API has reached its daily limit (20 requests/day on free tier). ${retryMessage} Thanks for your patience! 🙏`,
+          response: `I'm taking a short break! The API has reached its limit. ${retryMessage} Thanks for your patience!`,
         },
         { status: 429 }
       );
@@ -414,19 +738,71 @@ Izzat Bot:`;
       return NextResponse.json(
         {
           error: "invalid_key",
-          response: "Oops! There's an issue with the API configuration. Please contact Izzat to fix this. 🔧",
+          response: "Oops! There's an issue with the API configuration. Please contact Izzat to fix this.",
         },
         { status: 401 }
       );
     }
 
-    // Generic error with friendly message
+    // Model overloaded (503)
+    if (fullError.includes("503") || fullError.includes("overloaded") || fullError.includes("unavailable")) {
+      return NextResponse.json(
+        {
+          error: "overloaded",
+          response: "The AI is a bit busy right now! 🤖💤 Please wait a few seconds and try again.",
+        },
+        { status: 503 }
+      );
+    }
+
+    // Generic error - show actual error for debugging
+    const actualError = error instanceof Error ? error.message : "Unknown error";
+    console.log("Full error details:", error);
+
     return NextResponse.json(
       {
         error: "server_error",
-        response: "Sorry, I encountered an unexpected error. Please try again in a moment! 🙏",
+        response: `Oops! Something went wrong: ${actualError}. Please try again! 🔧`,
       },
       { status: 500 }
     );
   }
+}
+
+// Helper function to handle image generation errors
+function handleImageError(imageError: unknown) {
+  let errorStr = "";
+  if (imageError instanceof Error) {
+    errorStr = imageError.message.toLowerCase();
+  }
+  errorStr += " " + JSON.stringify(imageError).toLowerCase();
+
+  console.log("Image error string:", errorStr);
+
+  if (errorStr.includes("429") || errorStr.includes("quota") || errorStr.includes("exhausted") || errorStr.includes("resource_exhausted") || errorStr.includes("limit")) {
+    return NextResponse.json({
+      success: true,
+      response: "Sorry, I can't generate images right now - the free image generation quota has been exceeded. 😅 Please try again in about 1 hour. But I can still chat with you in the meantime!",
+    });
+  }
+
+  if (errorStr.includes("abort") || errorStr.includes("timeout")) {
+    return NextResponse.json({
+      success: true,
+      response: "The image is taking too long to generate. 🕐 The server might be busy. Please try again with a simpler description!",
+    });
+  }
+
+  if (errorStr.includes("network") || errorStr.includes("fetch") || errorStr.includes("econnrefused")) {
+    return NextResponse.json({
+      success: true,
+      response: "I couldn't connect to the image generation service. 🌐 Please check your internet connection and try again!",
+    });
+  }
+
+  const errorMessage = imageError instanceof Error ? imageError.message : 'Unknown error';
+  return NextResponse.json({
+    success: true,
+    response: `Sorry, I couldn't generate that image. ${errorMessage}`,
+  });
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { useTheme } from "@/context/ThemeContext";
+import { FadeIn } from "@/components/PageTransition";
+import emailjs from "@emailjs/browser";
 
 const socialLinks = [
   {
@@ -44,7 +46,6 @@ const socialLinks = [
 ];
 
 export default function Contact() {
-  const { ref, isVisible } = useScrollAnimation<HTMLElement>();
   const { theme } = useTheme();
   const [formState, setFormState] = useState({
     name: "",
@@ -68,6 +69,7 @@ export default function Contact() {
     buttonText: theme === "dark" ? "#171717" : "#ffffff",
     buttonHover: theme === "dark" ? "#e5e5e5" : "#404040",
     success: "#22c55e",
+    error: "#ef4444",
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,19 +77,35 @@ export default function Contact() {
     setIsSubmitting(true);
     setSubmitStatus("idle");
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Send email using EmailJS
+      await emailjs.send(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!,
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID!,
+        {
+          from_name: formState.name,
+          from_email: formState.email,
+          message: formState.message,
+          to_name: "Izzat",
+        },
+        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!
+      );
+
+      setSubmitStatus("success");
+      setFormState({ name: "", email: "", message: "" });
+    } catch (error) {
+      console.error("EmailJS Error:", error);
+      setSubmitStatus("error");
+    }
 
     setIsSubmitting(false);
-    setSubmitStatus("success");
-    setFormState({ name: "", email: "", message: "" });
 
     // Reset status after 5 seconds
     setTimeout(() => setSubmitStatus("idle"), 5000);
   };
 
   return (
-    <section id="contact" className="relative py-24 md:py-32" ref={ref}>
+    <section id="contact" className="relative py-24 md:py-32">
       <div className="max-w-5xl mx-auto px-8 md:px-12">
         {/* Success Toast */}
         <div
@@ -116,30 +134,60 @@ export default function Contact() {
           </div>
         </div>
 
-        {/* Section Header */}
+        {/* Error Toast */}
         <div
-          className={`mb-12 text-center transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+          className={`fixed top-24 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-xl flex items-center gap-3 transition-all duration-500 ${
+            submitStatus === "error"
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 -translate-y-4 pointer-events-none"
           }`}
+          style={{
+            backgroundColor: colors.bg,
+            border: `1px solid ${colors.error}`,
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          }}
         >
-          <span style={{ color: colors.textLabel }} className="text-sm tracking-widest uppercase mb-3 block">
-            Get In Touch
-          </span>
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: colors.text }}>
-            Contact<span style={{ color: colors.textLabel }}>.</span>
-          </h2>
-          <p style={{ color: colors.textMuted }} className="max-w-lg mx-auto">
-            Have a project in mind or just want to say hello? Feel free to reach out.
-            I&apos;m always open to discussing new opportunities.
-          </p>
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ backgroundColor: colors.error }}
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-medium" style={{ color: colors.text }}>Failed to send!</p>
+            <p className="text-sm" style={{ color: colors.textMuted }}>Please try again later.</p>
+          </div>
         </div>
+
+        {/* Section Header */}
+        <FadeIn delay={0}>
+          <div className="mb-12 text-center">
+            <span style={{ color: colors.textLabel }} className="text-sm tracking-widest uppercase mb-3 block">
+              Get In Touch
+            </span>
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight mb-4" style={{ color: colors.text }}>
+              Contact<span style={{ color: colors.textLabel }}>.</span>
+            </h2>
+            <p style={{ color: colors.textMuted }} className="max-w-lg mx-auto">
+              Have a project in mind or just want to say hello? Feel free to reach out.
+              I&apos;m always open to discussing new opportunities.
+            </p>
+          </div>
+        </FadeIn>
 
         <div className="grid md:grid-cols-2 gap-12 md:gap-16">
           {/* Contact Form */}
-          <div
-            className={`transition-all duration-700 delay-100 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{
+              duration: 0.5,
+              delay: 0.1,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
           >
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name Input */}
@@ -276,13 +324,18 @@ export default function Contact() {
                 )}
               </button>
             </form>
-          </div>
+          </motion.div>
 
           {/* Contact Info */}
-          <div
-            className={`transition-all duration-700 delay-200 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{
+              duration: 0.5,
+              delay: 0.2,
+              ease: [0.25, 0.1, 0.25, 1],
+            }}
           >
             <div className="space-y-8">
               {/* Email */}
@@ -327,12 +380,20 @@ export default function Contact() {
                   Follow Me
                 </span>
                 <div className="flex gap-4">
-                  {socialLinks.map((social) => (
-                    <a
+                  {socialLinks.map((social, index) => (
+                    <motion.a
                       key={social.name}
                       href={social.href}
                       target="_blank"
                       rel="noopener noreferrer"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 0.3,
+                        delay: 0.3 + index * 0.1,
+                        ease: "easeOut",
+                      }}
                       className="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 hover:-translate-y-1 hover:scale-110"
                       style={{
                         backgroundColor: colors.bgInput,
@@ -342,19 +403,25 @@ export default function Contact() {
                       aria-label={social.name}
                     >
                       {social.icon}
-                    </a>
+                    </motion.a>
                   ))}
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Footer */}
-        <div
-          className={`mt-24 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 transition-all duration-700 delay-300 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{
+            duration: 0.5,
+            delay: 0.3,
+            ease: [0.25, 0.1, 0.25, 1],
+          }}
+          className="mt-24 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
           style={{ borderTop: `1px solid ${colors.border}` }}
         >
           <p className="text-sm" style={{ color: colors.textMuted }}>
@@ -363,7 +430,7 @@ export default function Contact() {
           <p className="text-sm" style={{ color: colors.textLabel }}>
             Designed & Built with Next.js
           </p>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -102,6 +102,16 @@ export default function Navbar() {
       )
     },
     {
+      name: "GitHub",
+      href: "/#github",
+      section: "github",
+      icon: (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+        </svg>
+      )
+    },
+    {
       name: "Experience",
       href: "/#experience",
       section: "experience",
@@ -123,11 +133,21 @@ export default function Navbar() {
     },
     {
       name: "Projects",
-      href: "/projects",
+      href: "/#projects",
       section: "projects",
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z" />
+        </svg>
+      )
+    },
+    {
+      name: "Blog",
+      href: "/#blog",
+      section: "blog",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
         </svg>
       )
     },
@@ -167,7 +187,7 @@ export default function Navbar() {
   useEffect(() => {
     if (!isHomePage) return;
 
-    const sections = ["home", "about", "experience", "skills", "projects", "achievement", "services", "contact"];
+    const sections = ["home", "about", "github", "experience", "skills", "projects", "blog", "achievement", "services", "contact"];
 
     const observerOptions = {
       root: null,
@@ -203,6 +223,28 @@ export default function Navbar() {
     return href;
   };
 
+  // Handle smooth scroll for hash links
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Extract section id from href (e.g., "/#blog" -> "blog" or "#blog" -> "blog")
+    const sectionId = href.replace("/#", "").replace("#", "");
+    const element = document.getElementById(sectionId);
+
+    if (element) {
+      e.preventDefault();
+      // Calculate position with offset for fixed navbar (64px height + 16px padding)
+      const navbarOffset = 80;
+      const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+      const offsetPosition = elementPosition - navbarOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth"
+      });
+      // Update URL hash without page reload
+      window.history.pushState(null, "", `#${sectionId}`);
+    }
+  };
+
   // Check if a nav link is active
   const isActive = (link: typeof navLinks[0]) => {
     // On projects pages, highlight Projects link
@@ -232,15 +274,15 @@ export default function Navbar() {
           {/* Logo / Name */}
           <Link
             href="/"
-            className="font-bold text-lg tracking-tight transition-colors duration-300"
+            className="font-bold text-lg tracking-tight transition-all duration-300 hover:scale-105 active:scale-95"
             style={{ color: theme === "dark" ? "#ffffff" : "#171717" }}
           >
             Izzat<span style={{ color: theme === "dark" ? "#737373" : "#a3a3a3" }}>.</span>
           </Link>
 
-          {/* Desktop Navigation - Right aligned with Icons */}
+          {/* Desktop Navigation - Centered with Icons */}
           <div
-            className="hidden md:flex items-center gap-0.5 px-1.5 py-1 rounded-2xl border"
+            className="hidden md:flex items-center gap-0.5 px-1.5 py-1 rounded-2xl border absolute left-1/2 -translate-x-1/2"
             style={{
               backgroundColor: theme === "dark" ? "rgba(10, 10, 10, 0.6)" : "rgba(250, 248, 245, 0.8)",
               borderColor: theme === "dark" ? "rgba(38, 38, 38, 0.8)" : "rgba(232, 228, 220, 0.8)",
@@ -250,7 +292,8 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={getHref(link.href)}
-                className="relative p-2 rounded-xl transition-all duration-300 group"
+                onClick={(e) => isHomePage && handleNavClick(e, link.href)}
+                className="relative p-2 rounded-xl transition-all duration-300 ease-out group hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
                 style={{
                   color: isActive(link)
                     ? (theme === "dark" ? "#ffffff" : "#2d2a26")
@@ -261,7 +304,7 @@ export default function Navbar() {
                 }}
                 title={link.name}
               >
-                <span className="transition-transform duration-300 group-hover:scale-110 block">
+                <span className="transition-all duration-300 ease-out group-hover:scale-110 block">
                   {link.icon}
                 </span>
                 {/* Tooltip */}
@@ -283,61 +326,33 @@ export default function Navbar() {
                 )}
               </Link>
             ))}
+          </div>
 
-            {/* Divider */}
-            <div
-              className="w-px h-5 mx-1"
-              style={{ backgroundColor: theme === "dark" ? "rgba(82, 82, 82, 0.5)" : "rgba(156, 149, 138, 0.5)" }}
-            />
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="relative p-2 rounded-xl transition-all duration-300 group"
-              style={{
-                color: theme === "dark" ? "#525252" : "#9c958a",
-              }}
-              title={theme === "dark" ? "Light Mode" : "Dark Mode"}
-            >
-              <span className="transition-transform duration-300 group-hover:scale-110 block">
-                {theme === "dark" ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
-                  </svg>
-                )}
-              </span>
-              {/* Tooltip */}
-              <span
-                className="absolute -bottom-9 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-lg text-xs font-medium tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none scale-95 group-hover:scale-100"
-                style={{
-                  backgroundColor: theme === "dark" ? "#ffffff" : "#2d2a26",
-                  color: theme === "dark" ? "#0a0a0a" : "#faf8f5",
-                }}
-              >
-                {theme === "dark" ? "Light" : "Dark"}
-              </span>
-            </button>
+          {/* Theme Toggle - Separate on the right */}
+          <div className="hidden md:block transition-all duration-300 ease-out hover:scale-105 hover:-translate-y-0.5 active:scale-95 active:translate-y-0">
+            <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden relative w-10 h-10 flex items-center justify-center group"
+            className="md:hidden relative w-10 h-10 flex items-center justify-center group rounded-xl transition-all duration-300 ease-out hover:scale-105 active:scale-95"
+            style={{
+              backgroundColor: isMenuOpen
+                ? (theme === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(45, 42, 38, 0.05)")
+                : "transparent",
+            }}
             aria-label="Toggle menu"
           >
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 transition-transform duration-300 group-hover:scale-110">
               <span
-                className={`block w-5 h-px transition-all duration-300 ${
+                className={`block w-5 h-px transition-all duration-300 ease-out ${
                   isMenuOpen ? "rotate-45 translate-y-[3.5px]" : ""
                 }`}
                 style={{ backgroundColor: theme === "dark" ? "#a3a3a3" : "#525252" }}
               ></span>
               <span
-                className={`block w-5 h-px transition-all duration-300 ${
+                className={`block w-5 h-px transition-all duration-300 ease-out ${
                   isMenuOpen ? "-rotate-45 -translate-y-[3.5px]" : ""
                 }`}
                 style={{ backgroundColor: theme === "dark" ? "#a3a3a3" : "#525252" }}
@@ -356,12 +371,15 @@ export default function Navbar() {
             className="flex flex-col gap-1 pt-4"
             style={{ borderTop: `1px solid ${theme === "dark" ? "rgba(38, 38, 38, 0.5)" : "rgba(232, 228, 220, 0.8)"}` }}
           >
-            {navLinks.map((link) => (
+            {navLinks.map((link, index) => (
               <Link
                 key={link.name}
                 href={getHref(link.href)}
-                onClick={() => setIsMenuOpen(false)}
-                className="text-sm tracking-wide transition-all duration-300 flex items-center gap-3 py-2 px-3 rounded-xl"
+                onClick={(e) => {
+                  setIsMenuOpen(false);
+                  if (isHomePage) handleNavClick(e, link.href);
+                }}
+                className="text-sm tracking-wide transition-all duration-300 ease-out flex items-center gap-3 py-2 px-3 rounded-xl hover:translate-x-1 active:scale-[0.98] group"
                 style={{
                   color: isActive(link)
                     ? (theme === "dark" ? "#ffffff" : "#2d2a26")
@@ -369,10 +387,11 @@ export default function Navbar() {
                   backgroundColor: isActive(link)
                     ? (theme === "dark" ? "rgba(255, 255, 255, 0.05)" : "rgba(45, 42, 38, 0.05)")
                     : "transparent",
+                  animationDelay: `${index * 50}ms`,
                 }}
               >
                 {/* Icon */}
-                <span className="w-5 h-5 flex-shrink-0">{link.icon}</span>
+                <span className="w-5 h-5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110">{link.icon}</span>
                 <span className="font-medium">{link.name}</span>
               </Link>
             ))}
